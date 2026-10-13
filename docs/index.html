@@ -1,36 +1,39 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="上传天空照片，在浏览器本地探索云量与云类型。">
-  <title>观云 / Allsky Cloud Lab</title>
+  <meta name="description" content="Explore cloud cover and cloud types locally in your browser.">
+  <title>Allsky Cloud Lab</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header><a class="brand" href="./">观云 <span>ALLSKY CLOUD LAB</span></a><a href="https://github.com/genlier/allsky-cloud-lab" target="_blank" rel="noopener">源码 ↗</a></header>
+  <header>
+    <a class="brand" href="./"><span class="brand-name" data-i18n="brand">Sky / Lab</span><span>ALLSKY CLOUD LAB</span></a>
+    <nav class="header-actions"><a href="https://github.com/genlier/allsky-cloud-lab" target="_blank" rel="noopener" data-i18n="source">Source ↗</a><select id="language" aria-label="Display language" data-i18n-aria="language"><option value="en">English</option><option value="zh">中文</option></select></nav>
+  </header>
   <main>
-    <section class="intro"><p class="eyebrow">A SMALL OBSERVATORY IN YOUR BROWSER</p><h1>把天空，<br>读成一幅云图。</h1><p class="lede">上传一张天空照片，观察云覆盖的比例，识别云量与云类型。<br>图像处理和模型推理都在你的浏览器里完成。</p><div class="tags"><span>本地处理</span><span>云量估计</span><span>双 CNN 识别</span></div></section>
-    <section class="workspace" aria-label="照片分析">
+    <section class="intro"><p class="eyebrow" data-i18n="eyebrow">A SMALL OBSERVATORY IN YOUR BROWSER</p><h1 data-i18n="headline">Read the sky.&#10;Trace the clouds.</h1><p class="lede" data-i18n="lede">Upload a sky photo to explore cloud cover and cloud types.&#10;Image processing and inference happen entirely in your browser.</p><div class="tags"><span data-i18n="local">Local processing</span><span data-i18n="coverTag">Cloud cover</span><span data-i18n="cnnTag">Two CNN models</span></div></section>
+    <section class="workspace" aria-label="Photo analysis" data-i18n-aria="workspace">
       <div class="visual-panel">
-        <div class="panel-top"><span id="image-title">合成天空 · 可直接试用</span><span id="dimensions">512 × 512</span></div>
-        <div id="dropzone" class="dropzone"><canvas id="sky" width="512" height="512" aria-label="天空图像与云候选区域"></canvas><div class="view-switch"><button id="original" class="selected" type="button">原图</button><button id="mask" type="button">云候选掩膜</button></div></div>
-        <div class="upload-row"><label class="upload-button" for="upload">＋ 上传天空照片</label><input id="upload" type="file" accept="image/jpeg,image/png,image/webp"><button id="sample" type="button">使用合成示例</button></div><p class="hint">支持 JPG / PNG / WebP，单张 ≤ 20 MB。也可以拖入照片。</p>
+        <div class="panel-top"><span id="image-title">Synthetic sky · Try it now</span><span id="dimensions">512 × 512</span></div>
+        <div id="dropzone" class="dropzone"><canvas id="sky" width="512" height="512" aria-label="Sky image and candidate cloud regions" data-i18n-aria="canvas"></canvas><div class="view-switch"><button id="original" class="selected" type="button" data-i18n="original">Original</button><button id="mask" type="button" data-i18n="mask">Cloud candidate mask</button></div></div>
+        <div class="upload-row"><label class="upload-button" for="upload" data-i18n="upload">＋ Upload sky photo</label><input id="upload" type="file" aria-label="Upload sky photo" data-i18n-aria="upload" accept="image/jpeg,image/png,image/webp"><button id="sample" type="button" data-i18n="sample">Try synthetic sky</button></div><p class="hint" data-i18n="formats">JPG / PNG / WebP, up to 20 MB per photo. Drag and drop works too.</p>
       </div>
       <div class="results-panel">
-        <div class="result-heading"><span class="eyebrow">01 / CLOUD COVER</span><span class="method">颜色阈值</span></div>
-        <div class="coverage"><span id="coverage">--</span><small>%</small><div><strong id="amount">待分析</strong><span>有效区域内的云候选比例</span></div></div>
-        <div class="scale"><i id="scale-marker"></i></div><div class="scale-labels"><span>无云 ≤10%</span><span>少云 ≤30%</span><span>多云 ≤70%</span><span>阴天</span></div>
-        <label class="control" for="threshold"><span>红蓝差值阈值 <output id="threshold-value">−0.10</output></span><input id="threshold" type="range" min="-0.5" max="0.3" step="0.01" value="-0.1"></label>
-        <label class="checkbox"><input id="circle" type="checkbox" checked> 全天空圆形区域 <span>普通天空照片可取消</span></label>
+        <div class="result-heading"><span class="eyebrow" data-i18n="coverHeading">01 / CLOUD COVER</span><span class="method" data-i18n="thresholdMethod">Color threshold</span></div>
+        <div class="coverage"><span id="coverage">--</span><small>%</small><div><strong id="amount">Awaiting analysis</strong><span data-i18n="fraction">Candidate cloud fraction in the valid region</span></div></div>
+        <div class="scale"><i id="scale-marker"></i></div><div class="scale-labels"><span data-i18n="clearScale">Clear ≤10%</span><span data-i18n="fewScale">Few ≤30%</span><span data-i18n="cloudyScale">Cloudy ≤70%</span><span data-i18n="overcastScale">Overcast</span></div>
+        <label class="control" for="threshold"><span><span data-i18n="threshold">Red–blue difference threshold</span><output id="threshold-value">−0.10</output></span><input id="threshold" type="range" min="-0.5" max="0.3" step="0.01" value="-0.1"></label>
+        <label class="checkbox"><input id="circle" type="checkbox" checked><span class="checkbox-title" data-i18n="circle">Circular all-sky region</span><span data-i18n="circleHint">Uncheck for ordinary sky photos</span></label>
         <p id="quality" class="hint"></p>
-        <div class="type-section"><div class="result-heading"><span class="eyebrow">02 / NEURAL CLASSIFICATION</span><span class="method">ResNet18 · 监督学习</span></div><div class="type-title"><h2 id="cloud-type">等待识别</h2><span id="type-score"></span></div><p class="hint">CNN 云量：<strong id="cnn-amount">等待识别</strong> <span id="cnn-amount-score"></span></p><button class="analyze" id="analyze" type="button">加载模型并识别云量、云类型 ↗</button><p id="model-status" role="status" aria-live="polite">首次使用需下载两个模型约 23 MB，之后可使用浏览器缓存。</p><div id="rankings" class="rankings"></div></div>
-        <button id="download" class="export" type="button">↓ 下载本次分析 JSON</button>
+        <div class="type-section"><div class="result-heading"><span class="eyebrow" data-i18n="neuralHeading">02 / NEURAL CLASSIFICATION</span><span class="method" data-i18n="supervised">ResNet18 · Supervised</span></div><div class="type-title"><h2 id="cloud-type">Awaiting analysis</h2><span id="type-score"></span></div><p class="hint"><span data-i18n="cnnAmount">CNN cloud amount:</span> <strong id="cnn-amount">Awaiting analysis</strong> <span id="cnn-amount-score"></span></p><button class="analyze" id="analyze" type="button" data-i18n="analyze">Load models &amp; classify clouds ↗</button><p id="model-status" role="status" aria-live="polite">First use downloads two models, about 23 MB total. Your browser can cache them.</p><div id="rankings" class="rankings"></div></div>
+        <button id="download" class="export" type="button" data-i18n="download">↓ Download analysis JSON</button>
       </div>
     </section>
-    <section class="notes"><article><span>01</span><h3>选择天空区域</h3><p>优先上传以天空为主的日间图像。建筑、树木和太阳眩光会影响颜色阈值。圆形区域仅用于云量阈值估计；CNN 使用完整图像。</p></article><article><span>02</span><h3>让方法可见</h3><p>像素覆盖比例来自红蓝归一化差值；两个 ResNet18 分别预测云量档位和云类别。类别输出的 softmax 得分尚未做概率校准。</p></article><article><span>03</span><h3>保留证据边界</h3><p id="validation">模型在去重标注数据上训练；独立验证集选择轮次，最终测试集评估一次。随机划分结果与不同设备、新场景的实际效果存在差异。</p></article></section>
+    <section class="notes"><article><span>01</span><h3 data-i18n="regionTitle">Choose the sky region</h3><p data-i18n="regionNote">Use daytime images dominated by sky. Buildings, trees and sun glare affect the color threshold. The circular region applies only to threshold estimates; CNNs use the full image.</p></article><article><span>02</span><h3 data-i18n="methodTitle">Make the method visible</h3><p data-i18n="methodNote">Pixel coverage uses the normalized red–blue difference. Two ResNet18 models predict cloud amount and cloud type separately. Their softmax scores have not been probability-calibrated.</p></article><article><span>03</span><h3 data-i18n="evidenceTitle">Keep the evidence in view</h3><p id="validation">Models use deduplicated labeled data. A separate validation set selects the epoch; the final test set is evaluated once. Random-split results may differ from performance on other devices and new scenes.</p></article></section>
   </main>
-  <footer><span>观云 / ALLSKY CLOUD LAB</span><span>照片留在本地 · 模型从本站下载</span></footer>
+  <footer><span>ALLSKY CLOUD LAB</span><span data-i18n="footer">Photos stay local · Models download from this site</span></footer>
   <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -1,7 +1,9 @@
 # Archived algorithms
 
-这两份源码恢复自原作业压缩包，默认目录已改为通用名称。保留手工特征、决策树、随机森林、SVM、peridata 时间匹配与原 CNN 训练方法，便于回溯。
+**English** | [简体中文](README.zh-CN.md)
 
-原评估采用随机划分后直接添加补充样本，且使用测试集选择最佳轮次。复现实验时请使用根目录经过像素去重、独立验证集和最终测试评估的训练入口。
+These two source files preserve handcrafted features, decision trees, random forests, SVMs, peridata time matching and the original CNN training approach for reference.
 
-原 `--use-peridata` 在缺失记录时返回的特征维数与有记录时不同；该功能保留为历史实现参考，需修复后再使用。字段单位和时区尚需仪器资料确认。
+The original evaluation added supplementary samples after a random split and selected the best epoch using the test set. For reproducible experiments, use the root-level training entry point with pixel deduplication, a separate validation set and final test evaluation.
+
+The original `--use-peridata` returns different feature dimensions when records are missing. This historical implementation needs repair before use. Field units and time zones also require confirmation from instrument documentation.

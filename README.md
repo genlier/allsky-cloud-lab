@@ -1,68 +1,70 @@
 # Allsky Cloud Lab
 
-全天空图像云分类：PyTorch 迁移学习、批量推理与浏览器交互展示。
+**English** | [简体中文](README.zh-CN.md)
 
-## 交互展示
+All-sky image classification with PyTorch transfer learning, batch inference and an interactive browser demo.
 
-网页支持上传天空照片，自动估算云量，再点击识别按钮获取六种云类型候选得分；也支持掩膜预览、阈值调节与分析 JSON 下载。使用 GitHub Pages，或在项目根目录执行 `python -m http.server 8000 --directory docs` 后打开 `http://localhost:8000`。
+## Interactive Demo
 
-原压缩包只保存了两份源码和报告。重新获取标注数据后，分别训练了云类型六分类和云量四分类 ResNet18，并导出为 ONNX。网页使用这两个模型本地识别，另提供可调颜色阈值辅助查看云候选比例。运行方式见 [ONNX Runtime Web 官方文档](https://onnxruntime.ai/docs/get-started/with-javascript/web.html)。
+[Open the live demo](https://genlier.github.io/allsky-cloud-lab/). English is the default; use the language selector at the top right to switch to Chinese. The app remembers your explicit choice and preserves the photo and analysis when switching languages.
 
-照片只在浏览器中解码、推理，不发送至远端。首次识别会请求本站的两个 ONNX 模型（合计约 23 MB）与 jsDelivr 的固定版本 ONNX 运行库；网络受限时仍可使用云量阈值分析。模型使用浏览器缓存，耗时依设备性能而变。导出的 JSON 不含照片、原文件名或 EXIF。
+Upload a sky photo for an automatic cloud-cover estimate, then click classify to obtain scores for six cloud types. The app also offers mask previews, threshold adjustment and JSON export. To run locally, execute `python -m http.server 8000 --directory docs` in the project root and open `http://localhost:8000`.
 
-## 安装
+Separate ResNet18 models classify six cloud types and four cloud-amount classes. The browser runs both ONNX models locally and provides an adjustable color threshold for exploring candidate cloud fractions. See the [ONNX Runtime Web documentation](https://onnxruntime.ai/docs/get-started/with-javascript/web.html).
+
+First use downloads two ONNX models from this site (about 23 MB total) and a pinned ONNX runtime from jsDelivr. Threshold analysis remains available with limited network access. Models are cached in the browser; inference time depends on your device. JSON labels follow the selected language, with stable one-based class IDs for CNN candidates.
+
+## Installation
 
 ```sh
 conda activate myenv
 python -m pip install -r requirements.txt
 ```
 
-已安装 CUDA 版 PyTorch 时保留现有环境。代码自动选择 CUDA 或 CPU。
+Keep your existing CUDA-enabled PyTorch installation if available. The code selects CUDA or CPU automatically.
 
-## 数据
+## Data
 
-将自行获得授权的图片放在本地 `data/` 下。仓库包含代码、合成演示和用于网页推理的模型参数，原始照片保持本地。
+Place your datasets under `data/`. The repository includes a synthetic demo and browser-inference model parameters.
 
-| 目录 | 用途 | 标签格式 |
+| Directory | Purpose | Label Format |
 | --- | --- | --- |
-| `data/cloud_type/` | 云类型监督样本 | `类别_编号.jpg`，类别 1–6 |
-| `data/cloud_amount/` | 云量监督样本 | `类别_编号.jpg`，类别 1–4 |
-| `data/labeled_raw/` | 可选补充监督样本 | 前两段依次为云类型、云量；使用前请核实 |
-| `data/AllskyImagerData/` | 待预测图像，支持年月/日期目录 | 无需标签 |
+| `data/cloud_type/` | Supervised cloud-type samples | `class_id.jpg`, classes 1–6 |
+| `data/cloud_amount/` | Supervised cloud-amount samples | `class_id.jpg`, classes 1–4 |
+| `data/labeled_raw/` | Optional additional labeled samples | First two filename fields: cloud type, then cloud amount; verify before use |
+| `data/AllskyImagerData/` | Images for inference; monthly/daily subdirectories supported | No labels required |
 
-云类型类别依次为晴空、卷云、层状云、积状云、积雨云、混合云。云量类别依次为无云、少云、多云、阴天。
+Cloud types, in order: clear sky, cirrus, stratiform, cumuliform, cumulonimbus and mixed clouds. Cloud-amount classes: clear, few clouds, cloudy and overcast. Here, `class_id.jpg` denotes a class prefix followed by an image identifier, for example `1_001.jpg`.
 
-`peridata_*.csv` 为仪器伴随记录。当前公开 CNN 版本使用图像输入；这些记录的字段单位、设备代码和时间基准需查明后再融合，时间匹配本身不等于获得云类别真值。
+`peridata_*.csv` contains accompanying instrument records. The current CNN uses images only. Field units, device codes and time references need verification before record fusion; time matching alone does not supply ground-truth cloud labels.
 
-原始 Allsky 下载包包含按月嵌套的 ZIP。可先解压一个月的少量图像验证流程：
+The original Allsky download contains nested monthly ZIP archives. Extract a small sample from one month to check the pipeline:
 
 ```sh
 python prepare_allsky.py --archive /path/to/AllskyImagerData.zip --month 202303 --max-images 32
 ```
 
-省略 `--month` 和 `--max-images` 可解压全部月份。脚本以流式方式读取一个月份，并保留选中日期的伴随 CSV，检查路径越界与符号链接。全量解压前请预留足够磁盘空间。原始无标签图像用于推理检查，测试准确率来自独立标注测试集。
+Omit `--month` and `--max-images` to extract all months. The script streams one monthly archive at a time, retains accompanying CSVs for selected dates, and checks for path traversal and symbolic links. Allow enough disk space for full extraction. Unlabeled images support inference checks; accuracy is evaluated on a separate labeled test set.
 
-## 训练
+## Training
 
 ```sh
 python train_cnn.py --data-dir data/cloud_type --task cloud_type --epochs 20 --output outputs/cloud_type.pth
 ```
 
-补充已标注样本：
+Include additional labeled samples:
 
 ```sh
 python train_cnn.py --data-dir data/cloud_type --extra-data-dir data/labeled_raw --extra-label-mode raw --task cloud_type --output outputs/cloud_type.pth
 ```
 
-主样本和补充样本合并后，先按解码像素 SHA-256 去重，再分层划分 70% 训练候选集、30% 测试集；训练候选集内部划出验证集。仅验证集参与最佳轮次选择，最终测试集评估一次。相同像素对应冲突标签会报错，便于人工核查。近重复图、同一时刻的双设备图和相邻时刻图像仍需按日期/观测事件分组评估，当前随机划分只代表这一协议下的效果。
+After combining the main and additional samples, decoded-pixel SHA-256 hashes remove exact duplicates. A stratified split assigns 70% to a training pool and 30% to the test set; a validation set is then held out from the training pool. Only validation performance selects the best epoch, and the final test set is evaluated once. Identical pixels with conflicting labels raise an error for review. Near-duplicates, simultaneous images from different devices and adjacent observations still require date/event-grouped evaluation. The current random split describes performance under this specific protocol.
 
-恢复的云量标注存在一组相同像素、不同标签的冲突。此次展示模型使用 `--drop-conflicting` 排除该组所有副本。该参数需要显式启用，默认行为仍为报错。
+The cloud-amount dataset includes one group with identical pixels and conflicting labels. The demo model explicitly used `--drop-conflicting` to exclude every copy in this group. Without that flag, conflicting labels still raise an error.
 
-默认采用 ImageNet 预训练 ResNet18、轻度图像增强、AdamW、余弦学习率与标签平滑；可用 `--model resnet50`。模型越大并不保证小样本精度越高。首次训练会下载公开预训练权重到项目内 `.cache/`。显存不足时减小 `--batch-size`。输出模型、逐轮日志、划分清单及最终评估 JSON 到 `outputs/`。
+Defaults are ImageNet-pretrained ResNet18, mild augmentation, AdamW, cosine learning-rate decay and label smoothing. Use `--model resnet50` for the larger architecture; larger models do not necessarily improve small-sample accuracy. First training downloads public pretrained weights into `.cache/`. Reduce `--batch-size` if GPU memory is limited. Checkpoints, epoch logs, split manifests and final evaluation JSON are written to `outputs/`.
 
-早期对话中 85.26% 和 92.78% 的结果加入了未去重补充数据且反复查看测试集，存在泄漏和选择偏差；它们未作为项目验证指标发布。这里的指标以重新运行产生的评估文件为准。
-
-## 导出网页模型
+## Browser Model Export
 
 ```sh
 python -m pip install -r requirements-export.txt
@@ -70,34 +72,28 @@ python export_onnx.py --weights outputs/cloud_type.pth --output docs/models/clou
 python export_onnx.py --weights outputs/cloud_amount.pth --output docs/models/cloud_amount.onnx --quantize-weights
 ```
 
-网页当前模型均为 ResNet18，输入尺寸 224。重新训练展示模型时使用该配置。导出时清除文档字符串和元数据。FP32 导出验证数值一致性；网页版本将卷积与线性层权重按输出通道对称量化为 INT8，激活仍为 FP32，文件大小约缩减为四分之一。转换后的测试结果记录在 `docs/models/model-card.json`。网页使用 Canvas 缩放，训练使用 Pillow 缩放，两者的像素插值可能产生小幅差异。
+Both browser models use ResNet18 with 224-pixel inputs; retain this configuration when retraining demo models. Export removes docstrings and metadata. FP32 export verifies numerical agreement. The deployed models use symmetric per-output-channel INT8 quantization of convolutional and linear weights, with FP32 activations, reducing file size to about one quarter. Converted-model test results are recorded in `docs/models/model-card.json`. Browser Canvas resizing and training-time Pillow resizing can produce small interpolation differences.
 
-固定模型的转换后评估：
+Evaluate a converted model with the fixed split:
 
 ```sh
 python evaluate_onnx.py --model docs/models/cloud_type.onnx --task cloud_type --data-dir data/cloud_type --extra-data-dir data/labeled_raw --split-file outputs/cloud_type.split.json --output outputs/cloud_type.onnx.metrics.json
 ```
 
-## 批量预测
+## Batch Inference
 
 ```sh
 python predict_cnn.py --weights outputs/cloud_type.pth --data-dir data/AllskyImagerData --output-csv outputs/predictions.csv
 ```
 
-自动递归扫描。CSV 输出相对路径、类别、最大 softmax 概率及读取状态。损坏图片保留一条错误记录，处理继续。概率反映模型输出，尚未进行概率校准。仅加载可信来源的模型文件。旧纯 state_dict 权重可加 `--model resnet18` 或 `--model resnet50` 指定架构。
+The script scans recursively and writes relative paths, predicted classes, maximum softmax probabilities and read status to CSV. Damaged images receive an error row while processing continues. Scores are uncalibrated model outputs. Load model files from trusted sources. For legacy plain `state_dict` weights, specify the architecture with `--model resnet18` or `--model resnet50`.
 
-## 隐私
+## Mathematical Methods
 
-原始图片、仪器记录、训练日志、真实预测、权重与缓存均默认忽略。输出 CSV 使用数据根目录的相对路径，仍可能包含采集日期或设备编号，请勿直接公开。公开仓库未包含姓名、学号、邮箱、原提交链接或本机绝对路径。网页仅请求公共依赖与模型资源，无遥测或照片上传。
-
-`legacy/` 保存从压缩包恢复的两份算法源码，默认目录已匿名化。原报告含个人信息，未加入公开仓库。根目录训练代码修正了原评估划分与模型类别数问题。仅 `docs/models/` 下用于展示的 ONNX 网络参数公开，其中没有图像、文件名或个人信息；其他训练权重保持本地。
-
-## 数学方法
-
-ResNet 将图像映射为特征，再由线性层输出类别 logits。softmax 概率为
+ResNet maps images to features, and a linear layer produces class logits. Softmax gives
 
 $$p_k = \frac{\exp(z_k)}{\sum_j\exp(z_j)}.$$
 
-标签平滑使用 $q_k=(1-\varepsilon)\mathbf{1}_{k=y}+\varepsilon/K$，优化交叉熵 $L=-\sum_k q_k\log p_k$。余弦学习率随训练轮次衰减，以降低后期参数更新幅度。
+Label smoothing uses $q_k=(1-\varepsilon)\mathbf{1}_{k=y}+\varepsilon/K$ and optimizes cross-entropy $L=-\sum_k q_k\log p_k$. Cosine learning-rate decay reduces the update magnitude toward the end of training.
 
-网页阈值演示使用 $D=(R-B)/(R+B+\epsilon)$。在有效圆形区域内，将 $D>t$ 的像素视为云候选；云候选占有效像素的比例用于四档分类。该像素比例受薄云、气溶胶、太阳眩光与镜头投影影响，不等同于标定后的半球云覆盖率。
+The threshold demo uses $D=(R-B)/(R+B+\epsilon)$. Pixels satisfying $D>t$ in the valid region are cloud candidates; their fraction determines the four amount classes. With the circular option enabled, only the valid circular region is considered. Thin clouds, aerosols, sun glare and lens projection affect this pixel fraction, which differs from calibrated hemispheric cloud coverage.

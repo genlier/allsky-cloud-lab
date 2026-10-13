@@ -6,7 +6,7 @@ async function loadModel(name) {
   try { cache = await caches.open('allsky-models-v2'); } catch {}
   let response = cache && await cache.match(url);
   if (!response) {
-    self.postMessage({status: `正在下载${name === 'cloud_type' ? '云类型' : '云量'}模型 · 照片仍留在本地`});
+    self.postMessage({statusKey: 'downloading', statusParams: {task: name, progress: ''}});
     response = await fetch(url);
     if (!response.ok) throw new Error('Model download failed');
     const reader = response.body.getReader(), total = Number(response.headers.get('content-length'));
@@ -17,7 +17,7 @@ async function loadModel(name) {
       chunks.push(value); loaded += value.byteLength;
       if (loaded - reported > 1024 * 1024) {
         reported = loaded;
-        self.postMessage({status: `下载${name === 'cloud_type' ? '云类型' : '云量'}模型 ${total ? Math.min(100, Math.round(loaded / total * 100)) + '%' : (loaded / 1024 / 1024).toFixed(1) + ' MB'} · 照片仍留在本地`});
+        self.postMessage({statusKey: 'downloading', statusParams: {task: name, progress: total ? Math.min(100, Math.round(loaded / total * 100)) + '%' : (loaded / 1024 / 1024).toFixed(1) + ' MB'}});
       }
     }
     const blob = new Blob(chunks);
@@ -42,7 +42,7 @@ self.onmessage = async event => {
     }
     if (!typeSession) typeSession = await loadModel('cloud_type');
     if (!amountSession) amountSession = await loadModel('cloud_amount');
-    self.postMessage({status: '模型已加载，正在本地分析云量与云类型…'});
+    self.postMessage({statusKey: 'running'});
     const image = new ort.Tensor('float32', event.data.input, [1,3,224,224]);
     const type = await typeSession.run({image}), amount = await amountSession.run({image});
     self.postMessage({results: {type: softmax(type.logits.data), amount: softmax(amount.logits.data)}});
