@@ -32,8 +32,8 @@ const messages = {
   methodTitle: ['Make the method visible', '让方法可见'],
   methodNote: ['Pixel coverage uses the normalized red–blue difference. Two ResNet18 models predict cloud amount and cloud type separately. Their softmax scores have not been probability-calibrated.', '像素覆盖比例来自红蓝归一化差值；两个 ResNet18 分别预测云量档位和云类别。类别输出的 softmax 得分尚未做概率校准。'],
   evidenceTitle: ['Keep the evidence in view', '保留证据边界'],
-  validation: ['Models use deduplicated labeled data. A separate validation set selects the epoch; the final test set is evaluated once. Random-split results may differ from performance on other devices and new scenes.', '模型在去重标注数据上训练；独立验证集选择轮次，最终测试集评估一次。随机划分结果与不同设备、新场景的实际效果存在差异。'],
-  metrics: ['Final test accuracy on the deduplicated random split: cloud type {type}%, cloud amount {amount}%. A separate validation set selects the epoch. These results describe this split; other devices and new scenes need separate evaluation.', '去重后随机划分的最终测试准确率：云类型 {type}%，云量 {amount}%。独立验证集选择轮次。这些结果仅对应当前划分，跨设备、新场景效果需另行验证。'],
+  validation: ['Three-fold cross-validation selects settings on deduplicated training data. Final models use the training and validation pool together. The retained test set was inspected in earlier experiments; other devices and new scenes need separate evaluation.', '去重训练数据上的三折交叉验证选择配置，最终合并训练集与验证集重训。保留测试集在此前实验中已被查看；跨设备与新场景的表现需另行评估。'],
+  metrics: ['Final test accuracy of the deployed models: cloud type {type}%, cloud amount {amount}%. Three-fold cross-validation selects settings before refitting. The retained test set was inspected in earlier experiments; these results are a retrospective comparison.', '部署模型的最终测试准确率：云类型 {type}%，云量 {amount}%。三折交叉验证选择配置后合并重训。保留测试集在此前实验中已被查看，这些结果属于回顾性比较。'],
   footer: ['Photos stay local · Models download from this site', '照片留在本地 · 模型从本站下载'],
 };
 

@@ -1,18 +1,17 @@
 {
   "architecture": "resnet18",
   "image_size": 224,
-  "epochs": 12,
-  "seed": 42,
-  "protocol": "decoded-pixel deduplication, stratified 70/30 split, 20% internal validation, single final test; near duplicates not grouped; deployed fixed models re-evaluated after weight quantization",
+  "protocol": "decoded-pixel deduplication; original test held out of three-fold stratified CV on the training/validation pool; configuration selected by mean CV accuracy; median best epoch determines full-pool refit; fixed selected models re-evaluated after weight quantization",
+  "limitations": "test set inspected in earlier project experiments; retrospective comparison; near duplicates not grouped by observation event",
+  "weight_storage": "per-output-channel symmetric int8 weights; float32 activations",
   "cloud_type": {
-    "test_accuracy": 0.5773195876288659,
-    "best_validation_accuracy": 0.7555555555555555,
+    "test_accuracy": 0.6701030927835051,
     "confusion_matrix": [
       [
-        10,
-        2,
-        2,
+        11,
         1,
+        3,
+        0,
         0,
         0
       ],
@@ -21,24 +20,24 @@
         10,
         2,
         0,
-        1,
+        0,
+        1
+      ],
+      [
+        0,
+        3,
+        19,
+        2,
+        2,
         0
       ],
       [
         0,
-        4,
-        18,
-        2,
-        2,
-        0
-      ],
-      [
         1,
-        2,
-        1,
-        9,
-        1,
-        3
+        3,
+        11,
+        0,
+        2
       ],
       [
         0,
@@ -50,147 +49,225 @@
       ],
       [
         0,
-        2,
-        7,
         1,
-        3,
-        1
+        5,
+        0,
+        2,
+        6
       ]
     ],
     "report": {
       "晴空": {
-        "precision": 0.9090909090909091,
-        "recall": 0.6666666666666666,
-        "f1-score": 0.7692307692307693,
-        "support": 15
+        "precision": 1.0,
+        "recall": 0.7333333333333333,
+        "f1-score": 0.8461538461538461,
+        "support": 15.0
       },
       "卷云": {
-        "precision": 0.5,
+        "precision": 0.625,
         "recall": 0.7692307692307693,
-        "f1-score": 0.6060606060606061,
-        "support": 13
+        "f1-score": 0.6896551724137931,
+        "support": 13.0
       },
       "层状云": {
-        "precision": 0.5294117647058824,
-        "recall": 0.6923076923076923,
-        "f1-score": 0.6,
-        "support": 26
+        "precision": 0.5277777777777778,
+        "recall": 0.7307692307692307,
+        "f1-score": 0.6129032258064516,
+        "support": 26.0
       },
       "积状云": {
-        "precision": 0.6923076923076923,
-        "recall": 0.5294117647058824,
-        "f1-score": 0.6,
-        "support": 17
+        "precision": 0.8461538461538461,
+        "recall": 0.6470588235294118,
+        "f1-score": 0.7333333333333333,
+        "support": 17.0
       },
       "积雨云": {
-        "precision": 0.5333333333333333,
+        "precision": 0.6666666666666666,
         "recall": 0.6666666666666666,
-        "f1-score": 0.5925925925925926,
-        "support": 12
+        "f1-score": 0.6666666666666666,
+        "support": 12.0
       },
       "混合云": {
-        "precision": 0.25,
-        "recall": 0.07142857142857142,
-        "f1-score": 0.1111111111111111,
-        "support": 14
+        "precision": 0.6666666666666666,
+        "recall": 0.42857142857142855,
+        "f1-score": 0.5217391304347826,
+        "support": 14.0
       },
-      "accuracy": 0.5773195876288659,
+      "accuracy": 0.6701030927835051,
       "macro avg": {
-        "precision": 0.5690239499063029,
-        "recall": 0.5659520218343748,
-        "f1-score": 0.5464991798325132,
-        "support": 97
+        "precision": 0.7220441595441596,
+        "recall": 0.6626050420168067,
+        "f1-score": 0.6784085624681455,
+        "support": 97.0
       },
       "weighted avg": {
-        "precision": 0.5728896936901788,
-        "recall": 0.5773195876288659,
-        "f1-score": 0.5555042895249082,
-        "support": 97
+        "precision": 0.7068574323728963,
+        "recall": 0.6701030927835051,
+        "f1-score": 0.6738590030660656,
+        "support": 97.0
       }
     },
+    "pytorch_test_accuracy": 0.6701030927835051,
+    "pytorch_macro_f1": 0.6784085624681455,
+    "baseline_refit_accuracy": 0.6597938144329897,
+    "configuration": {
+      "name": "full_frozen_bn",
+      "scope": "all",
+      "backbone_lr": 3e-05,
+      "head_lr": 0.0003,
+      "freeze_bn": true,
+      "weight_decay": 0.001,
+      "smoothing": 0.05,
+      "augmentation": "mild"
+    },
+    "cv_mean_accuracy": 0.6562162162162162,
+    "cv_std_accuracy": 0.007633064199551807,
+    "cv_macro_f1": 0.6338502575550896,
+    "cv_folds": 3,
+    "cv_fold_results": [
+      {
+        "fold": 1,
+        "best_epoch": 8,
+        "accuracy": 0.6666666666666666,
+        "macro_f1": 0.6096442332140273,
+        "loss": 1.1261204481124878
+      },
+      {
+        "fold": 2,
+        "best_epoch": 11,
+        "accuracy": 0.6533333333333333,
+        "macro_f1": 0.6392543859649122,
+        "loss": 0.9758087396621704
+      },
+      {
+        "fold": 3,
+        "best_epoch": 10,
+        "accuracy": 0.6486486486486487,
+        "macro_f1": 0.6526521534863294,
+        "loss": 1.1458741426467896
+      }
+    ],
+    "refit_epochs": 10,
     "split_counts": {
-      "train": 179,
-      "validation": 45,
+      "refit_train": 224,
       "test": 97
     },
-    "pytorch_test_accuracy": 0.5670103092783505,
-    "download_bytes": 11226982
+    "download_bytes": 11226982,
+    "sha256": "f7de5f236bcfd12a1b3ea96a9e1024a17b6cc622885916ef8e39ac8bdf53eccf"
   },
   "cloud_amount": {
-    "test_accuracy": 0.7395833333333334,
-    "best_validation_accuracy": 0.7777777777777778,
+    "test_accuracy": 0.8125,
     "confusion_matrix": [
       [
         10,
-        4,
-        0,
+        3,
+        1,
         1
       ],
       [
-        4,
-        14,
+        2,
+        16,
         1,
         0
       ],
       [
         0,
-        6,
-        18,
-        4
+        2,
+        21,
+        5
       ],
       [
         0,
-        1,
-        4,
-        29
+        0,
+        3,
+        31
       ]
     ],
     "report": {
       "无云": {
-        "precision": 0.7142857142857143,
+        "precision": 0.8333333333333334,
         "recall": 0.6666666666666666,
-        "f1-score": 0.6896551724137931,
-        "support": 15
+        "f1-score": 0.7407407407407407,
+        "support": 15.0
       },
       "少云": {
-        "precision": 0.56,
-        "recall": 0.7368421052631579,
-        "f1-score": 0.6363636363636364,
-        "support": 19
+        "precision": 0.7619047619047619,
+        "recall": 0.8421052631578947,
+        "f1-score": 0.8,
+        "support": 19.0
       },
       "多云": {
-        "precision": 0.782608695652174,
-        "recall": 0.6428571428571429,
-        "f1-score": 0.7058823529411765,
-        "support": 28
+        "precision": 0.8076923076923077,
+        "recall": 0.75,
+        "f1-score": 0.7777777777777778,
+        "support": 28.0
       },
       "阴天": {
-        "precision": 0.8529411764705882,
-        "recall": 0.8529411764705882,
-        "f1-score": 0.8529411764705882,
-        "support": 34
+        "precision": 0.8378378378378378,
+        "recall": 0.9117647058823529,
+        "f1-score": 0.8732394366197183,
+        "support": 34.0
       },
-      "accuracy": 0.7395833333333334,
+      "accuracy": 0.8125,
       "macro avg": {
-        "precision": 0.7274588966021192,
-        "recall": 0.7248267728143889,
-        "f1-score": 0.7212105845472986,
-        "support": 96
+        "precision": 0.8101920601920602,
+        "recall": 0.7926341589267285,
+        "f1-score": 0.7979394887845592,
+        "support": 96.0
       },
       "weighted avg": {
-        "precision": 0.7527846790890269,
-        "recall": 0.7395833333333334,
-        "f1-score": 0.7416712766611346,
-        "support": 96
+        "precision": 0.8133131414381415,
+        "recall": 0.8125,
+        "f1-score": 0.8101982263954094,
+        "support": 96.0
       }
     },
+    "pytorch_test_accuracy": 0.8020833333333334,
+    "pytorch_macro_f1": 0.7903799903799904,
+    "baseline_refit_accuracy": 0.7291666666666666,
+    "configuration": {
+      "name": "full_frozen_bn",
+      "scope": "all",
+      "backbone_lr": 3e-05,
+      "head_lr": 0.0003,
+      "freeze_bn": true,
+      "weight_decay": 0.001,
+      "smoothing": 0.05,
+      "augmentation": "mild"
+    },
+    "cv_mean_accuracy": 0.7812612612612613,
+    "cv_std_accuracy": 0.005728105233665512,
+    "cv_macro_f1": 0.7760448398065128,
+    "cv_folds": 3,
+    "cv_fold_results": [
+      {
+        "fold": 1,
+        "best_epoch": 2,
+        "accuracy": 0.7866666666666666,
+        "macro_f1": 0.772785657998424,
+        "loss": 0.6789972186088562
+      },
+      {
+        "fold": 2,
+        "best_epoch": 9,
+        "accuracy": 0.7733333333333333,
+        "macro_f1": 0.7786194011008434,
+        "loss": 0.6351693272590637
+      },
+      {
+        "fold": 3,
+        "best_epoch": 5,
+        "accuracy": 0.7837837837837838,
+        "macro_f1": 0.7767294603202709,
+        "loss": 0.584613561630249
+      }
+    ],
+    "refit_epochs": 5,
     "split_counts": {
-      "train": 179,
-      "validation": 45,
+      "refit_train": 224,
       "test": 96
     },
-    "pytorch_test_accuracy": 0.75,
-    "download_bytes": 11225940
-  },
-  "weight_storage": "per-output-channel symmetric int8 weights; float32 activations"
+    "download_bytes": 11225940,
+    "sha256": "567aaa5634e24ba01c23ea4aad1a85a9e8e4281aa456efd7cdf1859b8ef20b41"
+  }
 }

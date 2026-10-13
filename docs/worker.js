@@ -1,9 +1,18 @@
-let ort, typeSession, amountSession;
+let ort, typeSession, amountSession, modelCard;
 
 async function loadModel(name) {
-  const url = new URL(`./models/${name}.onnx`, import.meta.url).href;
+  if (!modelCard) {
+    const manifest = await fetch(new URL('./models/model-card.json', import.meta.url), {cache: 'no-store'});
+    if (!manifest.ok) throw new Error('Model manifest download failed');
+    modelCard = await manifest.json();
+  }
+  const digest = modelCard[name].sha256;
+  if (!/^[a-f0-9]{64}$/.test(digest)) throw new Error('Invalid model checksum');
+  const versioned = new URL(`./models/${name}.onnx`, import.meta.url);
+  versioned.searchParams.set('v', digest);
+  const url = versioned.href;
   let cache;
-  try { cache = await caches.open('allsky-models-v2'); } catch {}
+  try { cache = await caches.open('allsky-models-v3'); } catch {}
   let response = cache && await cache.match(url);
   if (!response) {
     self.postMessage({statusKey: 'downloading', statusParams: {task: name, progress: ''}});
@@ -22,9 +31,16 @@ async function loadModel(name) {
     }
     const blob = new Blob(chunks);
     response = new Response(blob, {headers: {'Content-Type': 'application/octet-stream'}});
-    if (cache) try { await cache.put(url, response.clone()); } catch {}
   }
-  return ort.InferenceSession.create(await response.arrayBuffer(), {executionProviders: ['wasm']});
+  const bytes = await response.arrayBuffer();
+  const actual = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
+    value => value.toString(16).padStart(2, '0')).join('');
+  if (actual !== digest) {
+    if (cache) await cache.delete(url);
+    throw new Error('Model checksum mismatch');
+  }
+  if (cache) try { await cache.put(url, new Response(bytes)); } catch {}
+  return ort.InferenceSession.create(bytes, {executionProviders: ['wasm']});
 }
 
 function softmax(values) {

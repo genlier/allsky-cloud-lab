@@ -14,6 +14,15 @@
 
 首次识别会请求本站的两个 ONNX 模型（合计约 23 MB）与 jsDelivr 的固定版本 ONNX 运行库；网络受限时仍可使用云量阈值分析。模型使用浏览器缓存，耗时依设备性能而变。JSON 类别名称跟随当前语言，CNN 候选项附带从 1 开始的固定类别编号。
 
+## 模型评估
+
+| 任务 | PyTorch | 部署 ONNX |
+| --- | ---: | ---: |
+| 云类型 | 67.0% | 67.0% |
+| 云量 | 80.2% | 81.3% |
+
+保留测试集：云类型 97 张，云量 96 张。[完整指标与配置](docs/models/model-card.json)。
+
 ## 安装
 
 ```sh
@@ -64,12 +73,29 @@ python train_cnn.py --data-dir data/cloud_type --extra-data-dir data/labeled_raw
 
 默认采用 ImageNet 预训练 ResNet18、轻度图像增强、AdamW、余弦学习率与标签平滑；可用 `--model resnet50`。模型越大并不保证小样本精度越高。首次训练会下载公开预训练权重到项目内 `.cache/`。显存不足时减小 `--batch-size`。输出模型、逐轮日志、划分清单及最终评估 JSON 到 `outputs/`。
 
+## 小样本调参
+
+```sh
+python tune_cnn.py --task cloud_type --data-dir data/cloud_type --extra-data-dir data/labeled_raw --split-file outputs/cloud_type.split.json --batch-size 8 --output-dir outputs/tuning/cloud_type
+python tune_cnn.py --task cloud_amount --data-dir data/cloud_amount --extra-data-dir data/labeled_raw --split-file outputs/cloud_amount.split.json --drop-conflicting --batch-size 8 --output-dir outputs/tuning/cloud_amount
+```
+
+在支持 CUDA 的 `myenv` 环境中运行，先生成原始划分清单。三折分层交叉验证仅使用原训练集与验证集合并后的数据池，对比基线、冻结骨干、最后一组残差块微调、冻结 BatchNorm 的全网络微调四种 ResNet18 配置。按平均验证准确率选择配置，以宏平均 F1 打破并列；各折最佳轮次的中位数决定最终训练轮数，再一次性比较选中配置和重新训练的基线在保留测试集上的表现。两者使用相同的扩大训练池。日志、配置、权重和对比结果保存到输出目录，原权重与网页模型保持不变。此前已查看过的测试集提供回顾性比较，独立确认仍需新的保留样本。
+
+每个任务的划分清单使用相同的主数据与补充数据生成。云量任务示例：
+
+```sh
+python train_cnn.py --task cloud_amount --data-dir data/cloud_amount --extra-data-dir data/labeled_raw --drop-conflicting --epochs 12 --output outputs/cloud_amount.pth
+```
+
+网页部署的是选中的 `full_frozen_bn` 配置：骨干学习率 `3e-5`，分类头学习率 `3e-4`，权重衰减 `1e-3`，标签平滑 `0.05`，批量大小 8，冻结 BatchNorm 统计量。云类型、云量最终分别重训 10 轮和 5 轮。[模型说明](docs/models/model-card.json)记录交叉验证结果、PyTorch 与部署 ONNX 的测试指标、训练数量及文件校验值。
+
 ## 导出网页模型
 
 ```sh
 python -m pip install -r requirements-export.txt
-python export_onnx.py --weights outputs/cloud_type.pth --output docs/models/cloud_type.onnx --quantize-weights
-python export_onnx.py --weights outputs/cloud_amount.pth --output docs/models/cloud_amount.onnx --quantize-weights
+python export_onnx.py --weights outputs/tuning/cloud_type/full_frozen_bn.pth --output docs/models/cloud_type.onnx --quantize-weights
+python export_onnx.py --weights outputs/tuning/cloud_amount/full_frozen_bn.pth --output docs/models/cloud_amount.onnx --quantize-weights
 ```
 
 网页当前模型均为 ResNet18，输入尺寸 224。重新训练展示模型时使用该配置。导出时清除文档字符串和元数据。FP32 导出验证数值一致性；网页版本将卷积与线性层权重按输出通道对称量化为 INT8，激活仍为 FP32，文件大小约缩减为四分之一。转换后的测试结果记录在 `docs/models/model-card.json`。网页使用 Canvas 缩放，训练使用 Pillow 缩放，两者的像素插值可能产生小幅差异。
