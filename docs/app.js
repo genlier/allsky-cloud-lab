@@ -37,7 +37,7 @@ function resetType() {
   $('cnn-amount-score').textContent = '';
   $('type-score').textContent = '';
   $('rankings').replaceChildren();
-  if (!busy) $('model-status').textContent = '首次使用需下载两个模型约 90 MB，之后可使用浏览器缓存。';
+  if (!busy) $('model-status').textContent = '首次使用需下载两个模型约 23 MB，之后可使用浏览器缓存。';
 }
 
 function setImage(image, title) {

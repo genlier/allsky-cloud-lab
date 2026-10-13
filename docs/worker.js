@@ -3,13 +3,24 @@ let ort, typeSession, amountSession;
 async function loadModel(name) {
   const url = new URL(`./models/${name}.onnx`, import.meta.url).href;
   let cache;
-  try { cache = await caches.open('allsky-models-v1'); } catch {}
+  try { cache = await caches.open('allsky-models-v2'); } catch {}
   let response = cache && await cache.match(url);
   if (!response) {
     self.postMessage({status: `正在下载${name === 'cloud_type' ? '云类型' : '云量'}模型 · 照片仍留在本地`});
     response = await fetch(url);
     if (!response.ok) throw new Error('Model download failed');
-    const blob = await response.blob();
+    const reader = response.body.getReader(), total = Number(response.headers.get('content-length'));
+    const chunks = []; let loaded = 0, reported = 0;
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      chunks.push(value); loaded += value.byteLength;
+      if (loaded - reported > 1024 * 1024) {
+        reported = loaded;
+        self.postMessage({status: `下载${name === 'cloud_type' ? '云类型' : '云量'}模型 ${total ? Math.round(loaded / total * 100) + '%' : (loaded / 1024 / 1024).toFixed(1) + ' MB'} · 照片仍留在本地`});
+      }
+    }
+    const blob = new Blob(chunks);
     response = new Response(blob, {headers: {'Content-Type': 'application/octet-stream'}});
     if (cache) try { await cache.put(url, response.clone()); } catch {}
   }

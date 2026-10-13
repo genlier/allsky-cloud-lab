@@ -24,7 +24,7 @@
         <label class="control" for="threshold"><span>红蓝差值阈值 <output id="threshold-value">−0.10</output></span><input id="threshold" type="range" min="-0.5" max="0.3" step="0.01" value="-0.1"></label>
         <label class="checkbox"><input id="circle" type="checkbox" checked> 全天空圆形区域 <span>普通天空照片可取消</span></label>
         <p id="quality" class="hint"></p>
-        <div class="type-section"><div class="result-heading"><span class="eyebrow">02 / NEURAL CLASSIFICATION</span><span class="method">ResNet18 · 监督学习</span></div><div class="type-title"><h2 id="cloud-type">等待识别</h2><span id="type-score"></span></div><p class="hint">CNN 云量：<strong id="cnn-amount">等待识别</strong> <span id="cnn-amount-score"></span></p><button class="analyze" id="analyze" type="button">加载模型并识别云量、云类型 ↗</button><p id="model-status" role="status" aria-live="polite">首次使用需下载两个模型约 90 MB，之后可使用浏览器缓存。</p><div id="rankings" class="rankings"></div></div>
+        <div class="type-section"><div class="result-heading"><span class="eyebrow">02 / NEURAL CLASSIFICATION</span><span class="method">ResNet18 · 监督学习</span></div><div class="type-title"><h2 id="cloud-type">等待识别</h2><span id="type-score"></span></div><p class="hint">CNN 云量：<strong id="cnn-amount">等待识别</strong> <span id="cnn-amount-score"></span></p><button class="analyze" id="analyze" type="button">加载模型并识别云量、云类型 ↗</button><p id="model-status" role="status" aria-live="polite">首次使用需下载两个模型约 23 MB，之后可使用浏览器缓存。</p><div id="rankings" class="rankings"></div></div>
         <button id="download" class="export" type="button">↓ 下载本次分析 JSON</button>
       </div>
     </section>

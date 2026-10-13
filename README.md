@@ -8,7 +8,7 @@
 
 原压缩包只保存了两份源码和报告。重新获取标注数据后，分别训练了云类型六分类和云量四分类 ResNet18，并导出为 ONNX。网页使用这两个模型本地识别，另提供可调颜色阈值辅助查看云候选比例。运行方式见 [ONNX Runtime Web 官方文档](https://onnxruntime.ai/docs/get-started/with-javascript/web.html)。
 
-照片只在浏览器中解码、推理，不发送至远端。首次识别会请求本站的两个 ONNX 模型（约 90 MB）与 jsDelivr 的固定版本 ONNX 运行库；网络受限时仍可使用云量阈值分析。模型使用浏览器缓存，耗时依设备性能而变。导出的 JSON 不含照片、原文件名或 EXIF。
+照片只在浏览器中解码、推理，不发送至远端。首次识别会请求本站的两个 ONNX 模型（合计约 23 MB）与 jsDelivr 的固定版本 ONNX 运行库；网络受限时仍可使用云量阈值分析。模型使用浏览器缓存，耗时依设备性能而变。导出的 JSON 不含照片、原文件名或 EXIF。
 
 ## 安装
 
@@ -66,11 +66,17 @@ python train_cnn.py --data-dir data/cloud_type --extra-data-dir data/labeled_raw
 
 ```sh
 python -m pip install -r requirements-export.txt
-python export_onnx.py --weights outputs/cloud_type.pth --output docs/models/cloud_type.onnx
-python export_onnx.py --weights outputs/cloud_amount.pth --output docs/models/cloud_amount.onnx
+python export_onnx.py --weights outputs/cloud_type.pth --output docs/models/cloud_type.onnx --quantize-weights
+python export_onnx.py --weights outputs/cloud_amount.pth --output docs/models/cloud_amount.onnx --quantize-weights
 ```
 
-网页当前模型均为 ResNet18，输入尺寸 224。重新训练展示模型时使用该配置。导出时清除文档字符串和元数据，并验证 PyTorch 与 ONNX 数值一致性。网页使用 Canvas 缩放，训练使用 Pillow 缩放，两者的像素插值可能产生小幅差异。
+网页当前模型均为 ResNet18，输入尺寸 224。重新训练展示模型时使用该配置。导出时清除文档字符串和元数据。FP32 导出验证数值一致性；网页版本将卷积与线性层权重按输出通道对称量化为 INT8，激活仍为 FP32，文件大小约缩减为四分之一。转换后的测试结果记录在 `docs/models/model-card.json`。网页使用 Canvas 缩放，训练使用 Pillow 缩放，两者的像素插值可能产生小幅差异。
+
+固定模型的转换后评估：
+
+```sh
+python evaluate_onnx.py --model docs/models/cloud_type.onnx --task cloud_type --data-dir data/cloud_type --extra-data-dir data/labeled_raw --split-file outputs/cloud_type.split.json --output outputs/cloud_type.onnx.metrics.json
+```
 
 ## 批量预测
 
