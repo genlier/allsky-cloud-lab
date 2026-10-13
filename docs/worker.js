@@ -17,7 +17,7 @@ async function loadModel(name) {
       chunks.push(value); loaded += value.byteLength;
       if (loaded - reported > 1024 * 1024) {
         reported = loaded;
-        self.postMessage({status: `下载${name === 'cloud_type' ? '云类型' : '云量'}模型 ${total ? Math.round(loaded / total * 100) + '%' : (loaded / 1024 / 1024).toFixed(1) + ' MB'} · 照片仍留在本地`});
+        self.postMessage({status: `下载${name === 'cloud_type' ? '云类型' : '云量'}模型 ${total ? Math.min(100, Math.round(loaded / total * 100)) + '%' : (loaded / 1024 / 1024).toFixed(1) + ' MB'} · 照片仍留在本地`});
       }
     }
     const blob = new Blob(chunks);
